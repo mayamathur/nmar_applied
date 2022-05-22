@@ -1,0 +1,25 @@
+{
+    "id": "45F47333",
+    "path": "~/Dropbox/Personal computer/Independent studies/2021/NMAR (sensitivity analysis for NMAR missing data)/Applied example/helper_applied_NMAR.R",
+    "project_path": "helper_applied_NMAR.R",
+    "type": "r_source",
+    "hash": "0",
+    "contents": "",
+    "dirty": false,
+    "created": 1651239218390.0,
+    "source_on_save": false,
+    "relative_order": 2,
+    "properties": {
+        "tempName": "Untitled1",
+        "cursorPosition": "41,30",
+        "scrollLine": "25"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1651523215,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1651523216058,
+    "read_only": false,
+    "read_only_alternatives": []
+}
