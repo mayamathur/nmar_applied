@@ -28,37 +28,37 @@ source("helper_applied_NMAR.R")
 
 # RISK DIFFERENCE ----------------------------------
 
-# ~ Plot: d0 vs. B needed to explain away ----------------------------------
+# ~ Plot: rd_0 vs. B needed to explain away ----------------------------------
 
 # Fake example of a risk difference of 0.2
 pa = 0.5 
 p1 = 0.2  
 p0 = 0.1 
-d_obs = (p1-p0)
+rd_obs = (p1-p0)
 
 
 
-dp = expand_grid(.ps = c(0.2, 0.5, 0.75),
+dp = expand_grid(.pr = c(0.2, 0.5, 0.75),
                  .pa = pa,
                  .p1 = p1,
                  .p0 = p0,
-                 .d0 = seq(-d_obs, d_obs, 0.01) )
+                 .rd_0 = seq(-rd_obs, rd_obs, 0.01) )
 
 dp = dp %>%
   rowwise() %>%
-  mutate(B = get_B(ps = .ps,
+  mutate(B = get_B(pr = .pr,
                    pa = .pa,
                    p1 = .p1, 
                    p0 = .p0,  
-                   d0 = .d0) ) %>%
-  mutate(.ps = as.character(.ps) )
+                   rd_0 = .rd_0) ) %>%
+  mutate(.pr = as.character(.pr) )
 
 
 colors = c("#1B9E77", "#ff9900", "red")
 p = ggplot( data = dp,
-            aes(x = .d0,
+            aes(x = .rd_0,
                 y = B,
-                color = .ps ) ) +
+                color = .pr ) ) +
   
   # reference lines
   geom_vline( xintercept = 0,
@@ -86,7 +86,7 @@ p = ggplot( data = dp,
   #scale_x_log10( breaks = c(500, 1000) ) +
   
   xlab( bquote( bold( {RD^t}[XY * "|" * R == "0"] ) ) ) +
-  scale_x_continuous( breaks = c( seq( min(dp$.d0), max(dp$.d0), 0.02 ) ) ) +
+  scale_x_continuous( breaks = c( seq( min(dp$.rd_0), max(dp$.rd_0), 0.02 ) ) ) +
   
   ylab("Bias factor (B)") +
   scale_y_continuous( breaks = seq(1, 10, 0.5) ) +
@@ -121,7 +121,7 @@ n0.retained = n.randomized.cntrl - n.dropout.cntrl
 n0.retained / n.randomized.cntrl
 
 # overall retention at 6 mos
-( ps = (n0.retained + n1.retained) / (n.randomized.trt + n.randomized.cntrl) )
+( pr = (n0.retained + n1.retained) / (n.randomized.trt + n.randomized.cntrl) )
 
 ( pa = n1.retained / (n1.retained + n0.retained) )
 
@@ -136,30 +136,30 @@ expect_equal( 0.234, round( 102/n.randomized.trt, 3 ) )
 # vs. their calculation:
 expect_equal( 0.140, round( 62/n.randomized.cntrl, 3 ) )
 
-( d_obs = (p1-p0) )
+( rd_obs = (p1-p0) )
 
 
 # ~ At one point --------------------------
 
 
-# ~~ d0 = 0 --------------------------
-( B = get_B(ps = ps,
+# ~~ rd_0 = 0 --------------------------
+( B = get_B(pr = pr,
       pa = pa,
       p1 = p1,
       p0 = p0,
-      d0 = 0) )
+      rd_0 = 0) )
 
-# E-value for d0=0
+# E-value for rd_0=0
 g_trans(B)
 
 
-# ~~ d0 = -1 (the absolute bound)  --------------------------
-# the absolute bound on d0 for binary outcome
-( B = get_B(ps = ps,
+# ~~ rd_0 = -1 (the absolute bound)  --------------------------
+# the absolute bound on rd_0 for binary outcome
+( B = get_B(pr = pr,
             pa = pa,
             p1 = p1,
             p0 = p0,
-            d0 = -1) )
+            rd_0 = -1) )
 
 g_trans(B)
 
@@ -168,21 +168,22 @@ g_trans(B)
 
 # ~~ get_B should agree with Eq 4.1 --------------------------
 
-( B = get_B(ps = ps,
+( B = get_B(pr = pr,
             pa = pa,
             p1 = p1,
             p0 = p0,
-            d0 = 0.1) )
+            rd_0 = 0.08) )
 
-(1 / (2*))
+alpha = 
+(1 / (2*p0*pa) ) * sqrt()
 
 
 # ~~ get_B should agree with EValue package --------------------------
 
 # should match this
 library(EValue)
-d0 = -0.07
-termA = ( d_obs - (1-ps)*d0 ) / ps
+rd_0 = -0.07
+termA = ( rd_obs - (1-pr)*rd_0 ) / pr
 
 evalues.
   
@@ -192,29 +193,29 @@ evalues.
 # ~ Smoking plot -----------------------------------
 
 # add two hypothetical lower amounts of retention
-dp = expand_grid(.ps = c(0.2, 0.5, ps),
+dp = expand_grid(.pr = c(0.2, 0.5, pr),
                  .pa = pa,
                  .p1 = p1,
                  .p0 = p0,
-                 .d0 = seq(-d_obs, d_obs, 0.001) )
+                 .rd_0 = seq(-rd_obs, rd_obs, 0.001) )
 
 dp = dp %>%
   rowwise() %>%
-  mutate(B = get_B(ps = .ps,
+  mutate(B = get_B(pr = .pr,
                    pa = .pa,
                    p1 = .p1, 
                    p0 = .p0,  
-                   d0 = .d0) )  %>%
-  mutate(.ps = as.character( round(.ps,2) ) )
+                   rd_0 = .rd_0) )  %>%
+  mutate(.pr = as.character( round(.pr,2) ) )
 
 
 
 colors = c("#1B9E77", "#ff9900", "red")
 
 p = ggplot( data = dp,
-            aes(x = .d0,
+            aes(x = .rd_0,
                 y = B,
-                color = .ps) ) +
+                color = .pr) ) +
   
   
   # reference lines
@@ -278,7 +279,7 @@ bound1(ps = ps,
       p1 = p1, 
       p0 = p0, 
       B = 1.1,
-      d0 = 0)
+      rd_0 = 0)
 
 # Horowitz & Manski, 1998
 
@@ -316,7 +317,7 @@ pa = 0.5 # from flowchart figure
 ( p0 = 372.1 - 369.8 )  # change in walk time for treatment group
 # this is NOT the estimate that adjusts for covariates, though
 
-( d_obs = p1 - p0 )
+( rd_obs = p1 - p0 )
 
 
 # if deltas are perfectly balanced, no bias, and 50% dropout
@@ -325,7 +326,7 @@ expect_equal( 0, bound1(ps = 0.5,
                         p1 = p1,  
                         p0 = p0, 
                         B = 1,
-                        d0 = -d_obs) )
+                        rd_0 = -rd_obs) )
 
 # regular E-value case: ps=1
 # Ding Supplement, page 30
@@ -334,17 +335,17 @@ bound1(ps = 1,
        p1 = p1,  
        p0 = p0, 
        B = 2,
-       d0 = 0)
+       rd_0 = 0)
 (p1 - p0*2)*(pa + (1-pa)/2)
 
-# solve for B required to explain away if d0 = 0
+# solve for B required to explain away if rd_0 = 0
 #bm: think about why this doesn't depend on ps
 #  which is confirmed by the form of bound2()
 ( B = get_B(ps = ps,
             pa = pa,
             p1 = p1, 
             p0 = p0,  
-            d0 = 0) )
+            rd_0 = 0) )
 
 # convert to E-value of sorts, but note that MR_UY is on the mean ratio scale
 ( Eval = g_trans(B) )
@@ -358,7 +359,7 @@ bound1(ps = ps,
        p1 = p1, 
        p0 = p0,  
        B = 12,
-       d0 = 0) 
+       rd_0 = 0) 
 
 
 
@@ -375,7 +376,7 @@ bound1(ps = ps,
 #       pa = pa,
 #       p1 = p1, 
 #       p0 = p0,  
-#       d0 = 0)
+#       rd_0 = 0)
 # 
 # 
 # # convert to E-value, but note that ONE parameter is on mean ratio scale
@@ -384,7 +385,7 @@ bound1(ps = ps,
 # ( Eval = B + sqrt(B^2 - 1) )
 
 
-# ~ Plot: d0 vs. B needed to explain away ----------------------------------
+# ~ Plot: rd_0 vs. B needed to explain away ----------------------------------
 
 
 # for Bearne example
@@ -392,18 +393,18 @@ dp = expand_grid(.ps = ps,
                  .pa = pa,
                  .p1 = p1,
                  .p0 = p0,
-                 .d0 = seq(-25, 25, 0.01) )
+                 .rd_0 = seq(-25, 25, 0.01) )
 
 dp = dp %>% rowwise() %>%
   mutate(B = get_B(ps = .ps,
                    pa = .pa,
                    p1 = .p1, 
                    p0 = .p0,  
-                   d0 = .d0) )
+                   rd_0 = .rd_0) )
 
 # interesting! almost exactly linear 
 ggplot( data = dp,
-        aes(x = .d0,
+        aes(x = .rd_0,
             y = B) ) +
   geom_line() 
 

@@ -3,28 +3,28 @@
 
 
 # full expression
-bound1 = function(ps, pa, p1, p0,
+bound1 = function(pr, pa, p1, p0,
                   # sens params
-                  B, d0) {
+                  B, rd_0) {
   
-  ps*(p1 - p0*B)*(pa + (1-pa)/B) + (1-ps)*d0
+  pr*(p1 - p0*B)*(pa + (1-pa)/B) + (1-pr)*rd_0
 }
 
 
 #@2022-5-22: this should be equal to Eq. 4.1 prior to applying g(), I think?
 # bias factor required to shift ATE to true
-# true: the true d0 to shift to
-get_B = function(ps, pa, p1, p0, d0, true = 0) {
+# true: the true rd_0 to shift to
+get_B = function(pr, pa, p1, p0, rd_0, true = 0) {
   optim( par = 1,  # start value for B
          lower = 1,
          upper = 300,
-         # minimize distance between lower bound on d0 and true one
-         fn = function(.B) abs( bound1(ps = ps,
+         # minimize distance between lower bound on rd_0 and true one
+         fn = function(.B) abs( bound1(pr = pr,
                                        pa = pa,
                                        p1 = p1, 
                                        p0 = p0,  
                                        B = .B,
-                                       d0 = d0) - true ),
+                                       rd_0 = rd_0) - true ),
          method = "Brent" )$par
 }
 
@@ -34,10 +34,15 @@ get_B = function(ps, pa, p1, p0, d0, true = 0) {
 g_trans = function(RR) RR + sqrt(RR^2 - RR)
 
 
-# if we assume d0 >= 0
+# if we assume rd_0 >= 0
 bound2 = function(pa, p1, p0, B) {
-  ps*(p1 - p0*B)*(pa + (1-pa)/B)
+  pr*(p1 - p0*B)*(pa + (1-pa)/B)
 }
+
+
+# only used for sanity checks but not for bound fns above
+alpha = function(pr, pa, p1, p0, rd_0, true = 0)
+
 
 
 
