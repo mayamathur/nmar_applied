@@ -13,7 +13,7 @@ prelims()
 n.randomized.trt = 436
 n.randomized.cntrl = 442
 
-# at 6 mos 
+# at 3 or 6 mos 
 n.dropout.trt = 66
 n.dropout.cntrl = 59
 
@@ -24,47 +24,91 @@ n1.retained / n.randomized.trt
 n0.retained = n.randomized.cntrl - n.dropout.cntrl
 n0.retained / n.randomized.cntrl
 
-# overall retention at 6 mos
+# overall retention at 3 or 6 mos
 ( pr = (n0.retained + n1.retained) / (n.randomized.trt + n.randomized.cntrl) )
 
 ( pa = n1.retained / (n1.retained + n0.retained) )
 
-# Table 2 for self-reported cessation at 3 or 6 mos
-( p1 = 102/n1.retained )   
+# Table 2 for confirmed cessation at 3 or 6 mos (as reported in Abstract)
+( p1 = 91/n1.retained )   
 # vs. their calculation, which essentially assumes anyone who dropped
 #  out of either arm did NOT cease smoking:
-expect_equal( 0.234, round( 102/n.randomized.trt, 3 ) )
+expect_equal( 0.209, round( 91/n.randomized.trt, 3 ) )
 
 
-( p0 = 62/n0.retained ) 
+( p0 = 52/n0.retained ) 
 # vs. their calculation:
-expect_equal( 0.140, round( 62/n.randomized.cntrl, 3 ) )
+expect_equal( 0.118, round( 52/n.randomized.cntrl, 3 ) )
 
 ( rd_obs = (p1-p0) )
 
+### write results
+update_result_csv( name = "Retention rate",
+                   value = round(100* (n0.retained+n1.retained)/(n.randomized.cntrl+n.randomized.trt) ) )
+
+update_result_csv( name = "Retention rate control",
+                   value = round(100*n0.retained/n.randomized.cntrl) )
+
+update_result_csv( name = "Retention rate trt",
+                   value = round(100*n1.retained/n.randomized.trt) )
+
+update_result_csv( name = "pa",
+                   value = round(pa,2) )
+
+update_result_csv( name = "p0",
+                   value = round(p0,2) )
+
+update_result_csv( name = "p1",
+                   value = round(p1,2) )
+
+update_result_csv( name = "rd_obs",
+                   value = round(rd_obs,2) )
+
+update_result_csv( name = "Authors' rd_obs",
+                   value = round(0.209 - 0.118,2) )
 
 # ~ At specific values of RD_0 --------------------------
 
 # rd_0 = 0
-( B = get_B(pr = pr,
-            pa = pa,
-            p1 = p1,
-            p0 = p0,
-            rd_0 = 0) )
+# ( B = get_B(pr = pr,
+#             pa = pa,
+#             p1 = p1,
+#             p0 = p0,
+#             rd_0 = 0) )
+# 
+# # E-value for rd_0=0
+# g_trans(B)
 
-# E-value for rd_0=0
-g_trans(B)
+alpha = get_alpha(pr = pr,
+                  rd_0 = 0,
+                  true = 0)
+
+evalue0 = evalues.RD( n11 = n1.retained*p1,
+                      n10 = n1.retained*(1-p1),
+                      n01 = n0.retained*p0,
+                      n00 = n0.retained*(1-p0),
+                      #*note that equivalence arises when we set true = alpha:
+                      true = alpha )
+
+#@breaks if you set alpha = -1
+# look at this
+
+update_result_csv( name = "Evalue est rd_0=0",
+                   value = round(evalue0$est.Evalue, 2) )
+
+update_result_csv( name = "Evalue lo rd_0=0",
+                   value = round(evalue0$lower.Evalue, 2) )
 
 
 # rd_0 = -1 
 # the absolute bound on rd_0 for binary outcome
-( B = get_B(pr = pr,
-            pa = pa,
-            p1 = p1,
-            p0 = p0,
-            rd_0 = -1) )
-
-evalue = g_trans(B)
+# ( B = get_B(pr = pr,
+#             pa = pa,
+#             p1 = p1,
+#             p0 = p0,
+#             rd_0 = -1) )
+# 
+# evalue = g_trans(B)
 
 
 # SMOKING PLOT -----------------------------------

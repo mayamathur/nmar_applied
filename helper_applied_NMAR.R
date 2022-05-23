@@ -71,6 +71,9 @@ prelims = function() {
   library(experiment)
   library(testthat)
   library(EValue)
+  
+  overleaf.dir <<- "/Users/mmathur/Dropbox/Apps/Overleaf/Sensitivity analysis for NMAR missing data (Overleaf)/results_from_R"
+  results.dir <<- here("Results from R")
 }
 
 

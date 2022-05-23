@@ -1,0 +1,11 @@
+name,value,section
+Retention rate,86,NA
+Retention rate control,87,NA
+Retention rate trt,85,NA
+pa,0.49,NA
+p0,0.14,NA
+p1,0.25,NA
+rd_obs,0.11,NA
+Authors' rd_obs,0.09,NA
+Evalue est rd_0=0,3.02,NA
+Evalue lo rd_0=0,2.02,NA
