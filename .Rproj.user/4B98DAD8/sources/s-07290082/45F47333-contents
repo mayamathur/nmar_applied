@@ -3,36 +3,40 @@
 
 
 # full expression
-bound1 = function(ps, pa, m1, m0,
+bound1 = function(ps, pa, p1, p0,
                   # sens params
                   B, d0) {
   
-  ps*(m1 - m0*B)*(pa + (1-pa)/B) + (1-ps)*d0
+  ps*(p1 - p0*B)*(pa + (1-pa)/B) + (1-ps)*d0
 }
 
+
+#@2022-5-22: this should be equal to Eq. 4.1 prior to applying g(), I think?
 # bias factor required to shift ATE to true
 # true: the true d0 to shift to
-get_B = function(ps, pa, m1, m0, d0, true = 0) {
+get_B = function(ps, pa, p1, p0, d0, true = 0) {
   optim( par = 1,  # start value for B
          lower = 1,
          upper = 300,
          # minimize distance between lower bound on d0 and true one
          fn = function(.B) abs( bound1(ps = ps,
                                        pa = pa,
-                                       m1 = m1, 
-                                       m0 = m0,  
+                                       p1 = p1, 
+                                       p0 = p0,  
                                        B = .B,
                                        d0 = d0) - true ),
-         method = "Brent")$par
+         method = "Brent" )$par
 }
 
-# bias factor to E-value
+
+
+# transform bias factor to E-value
 g_trans = function(RR) RR + sqrt(RR^2 - RR)
 
 
 # if we assume d0 >= 0
-bound2 = function(pa, m1, m0, B) {
-  ps*(m1 - m0*B)*(pa + (1-pa)/B)
+bound2 = function(pa, p1, p0, B) {
+  ps*(p1 - p0*B)*(pa + (1-pa)/B)
 }
 
 

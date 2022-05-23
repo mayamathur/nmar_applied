@@ -32,27 +32,29 @@ source("helper_applied_NMAR.R")
 
 # Fake example of a risk difference of 0.2
 pa = 0.5 
-m1 = 0.2  
-m0 = 0.1 
-d_obs = (m1-m0)
+p1 = 0.2  
+p0 = 0.1 
+d_obs = (p1-p0)
+
+
 
 dp = expand_grid(.ps = c(0.2, 0.5, 0.75),
                  .pa = pa,
-                 .m1 = m1,
-                 .m0 = m0,
+                 .p1 = p1,
+                 .p0 = p0,
                  .d0 = seq(-d_obs, d_obs, 0.01) )
 
 dp = dp %>%
   rowwise() %>%
   mutate(B = get_B(ps = .ps,
                    pa = .pa,
-                   m1 = .m1, 
-                   m0 = .m0,  
+                   p1 = .p1, 
+                   p0 = .p0,  
                    d0 = .d0) ) %>%
   mutate(.ps = as.character(.ps) )
 
 
-
+colors = c("#1B9E77", "#ff9900", "red")
 p = ggplot( data = dp,
             aes(x = .d0,
                 y = B,
@@ -64,7 +66,7 @@ p = ggplot( data = dp,
               color = "gray") +
   
   # observed treatment effect
-  geom_vline( xintercept = m1-m0,
+  geom_vline( xintercept = p1-p0,
               lty = 2,
               color = "black") +
   
@@ -83,17 +85,17 @@ p = ggplot( data = dp,
   # use only some values
   #scale_x_log10( breaks = c(500, 1000) ) +
   
-  xlab( bquote( bold( {RD^t}[XY * "|" * S== "0"] ) ) ) +
+  xlab( bquote( bold( {RD^t}[XY * "|" * R == "0"] ) ) ) +
   scale_x_continuous( breaks = c( seq( min(dp$.d0), max(dp$.d0), 0.02 ) ) ) +
   
   ylab("Bias factor (B)") +
   scale_y_continuous( breaks = seq(1, 10, 0.5) ) +
   
-  guides( color = guide_legend(title = bquote( bold("Retention (") * bold(p[s]) * bold(")") ) ) ) +
+  guides( color = guide_legend(title = bquote( bold("Retention (") * bold(p[R]) * bold(")") ) ) ) +
   theme_bw() +
   theme( text = element_text(face = "bold"),
          panel.grid.major = element_blank(),
-         panel.grid.minor = element_blank() ) + 
+         panel.grid.minor = element_blank() ) 
   
   #@ couldn't get this to work well - try again
   # https://bookdown.dongzhuoer.com/hadley/ggplot2-book/direct-labelling.html
@@ -124,42 +126,58 @@ n0.retained / n.randomized.cntrl
 ( pa = n1.retained / (n1.retained + n0.retained) )
 
 # Table 2 for self-reported cessation at 3 or 6 mos
-( m1 = 102/n1.retained )   
+( p1 = 102/n1.retained )   
 # vs. their calculation, which essentially assumes anyone who dropped
 #  out of either arm did NOT cease smoking:
 expect_equal( 0.234, round( 102/n.randomized.trt, 3 ) )
 
 
-( m0 = 62/n0.retained ) 
+( p0 = 62/n0.retained ) 
 # vs. their calculation:
 expect_equal( 0.140, round( 62/n.randomized.cntrl, 3 ) )
 
-( d_obs = (m1-m0) )
+( d_obs = (p1-p0) )
 
 
 # ~ At one point --------------------------
 
+
+# ~~ d0 = 0 --------------------------
 ( B = get_B(ps = ps,
       pa = pa,
-      m1 = m1,
-      m0 = m0,
+      p1 = p1,
+      p0 = p0,
       d0 = 0) )
 
 # E-value for d0=0
 g_trans(B)
 
 
+# ~~ d0 = -1 (the absolute bound)  --------------------------
 # the absolute bound on d0 for binary outcome
 ( B = get_B(ps = ps,
             pa = pa,
-            m1 = m1,
-            m0 = m0,
+            p1 = p1,
+            p0 = p0,
             d0 = -1) )
 
 g_trans(B)
 
 
 # ~ Confirm agreement between E-value expressions ------------------
+
+# ~~ get_B should agree with Eq 4.1 --------------------------
+
+( B = get_B(ps = ps,
+            pa = pa,
+            p1 = p1,
+            p0 = p0,
+            d0 = 0.1) )
+
+(1 / (2*))
+
+
+# ~~ get_B should agree with EValue package --------------------------
 
 # should match this
 library(EValue)
@@ -176,16 +194,16 @@ evalues.
 # add two hypothetical lower amounts of retention
 dp = expand_grid(.ps = c(0.2, 0.5, ps),
                  .pa = pa,
-                 .m1 = m1,
-                 .m0 = m0,
+                 .p1 = p1,
+                 .p0 = p0,
                  .d0 = seq(-d_obs, d_obs, 0.001) )
 
 dp = dp %>%
   rowwise() %>%
   mutate(B = get_B(ps = .ps,
                    pa = .pa,
-                   m1 = .m1, 
-                   m0 = .m0,  
+                   p1 = .p1, 
+                   p0 = .p0,  
                    d0 = .d0) )  %>%
   mutate(.ps = as.character( round(.ps,2) ) )
 
@@ -205,7 +223,7 @@ p = ggplot( data = dp,
               color = "gray") +
   
   # observed treatment effect
-  geom_vline( xintercept = m1-m0,
+  geom_vline( xintercept = p1-p0,
               lty = 2,
               color = "black") +
   
@@ -224,7 +242,7 @@ p = ggplot( data = dp,
   # use only some values
   #scale_x_log10( breaks = c(500, 1000) ) +
   
-  xlab( bquote( bold( {RD^t}[XY * "|" * S== "0"] ) ) ) +
+  xlab( bquote( bold( {RD^t}[XY * "|" * R == "0"] ) ) ) +
   scale_x_continuous( breaks = c( seq( -0.10, 0.10, 0.02 ) ) ) +
   
   ylab("Bias factor (B)") +
@@ -232,7 +250,7 @@ p = ggplot( data = dp,
   scale_y_continuous( breaks = seq(1, 2, .1) ) +
 
   
-  guides( color = guide_legend(title = bquote( bold("Retention (") * bold(p[s]) * bold(")") ) ) ) +
+  guides( color = guide_legend(title = bquote( bold("Retention (") * bold(p[R]) * bold(")") ) ) ) +
   theme_bw() +
   theme( text = element_text(face = "bold"),
          panel.grid.major = element_blank(),
@@ -257,8 +275,8 @@ p
 # look at individual values
 bound1(ps = ps,
       pa = pa,
-      m1 = m1, 
-      m0 = m0, 
+      p1 = p1, 
+      p0 = p0, 
       B = 1.1,
       d0 = 0)
 
@@ -271,7 +289,7 @@ d = data.frame( X = sample(x = c( rep(0, n/2), rep(1, n/2) ),
                            size = n,
                            replace = FALSE) ) %>%
   rowwise() %>%
-  mutate(p_Y = ifelse(X == 1, m1, m0),
+  mutate(p_Y = ifelse(X == 1, p1, p0),
          Y = rbinom(n = 1,
                     size = 1,
                     prob = p_Y) )
@@ -288,24 +306,24 @@ ATEbounds(Y ~ X,
           maxY = 1,
           minY = 0)
 
-# GENERAL NONNEGATIVE OUTCOME: BEARNE DATA -----------------------------------------------
+# NOT IN USE? GENERAL NONNEGATIVE OUTCOME: BEARNE DATA -----------------------------------------------
 
 # observed d in completer stratum
 # Bearne abstract
 ps = 148/190  # abstract; 78% retention and CC analysis
 pa = 0.5 # from flowchart figure
-( m1 = 380.6 - 352.9 )  # pre/post hange in walk time for treatment group
-( m0 = 372.1 - 369.8 )  # change in walk time for treatment group
+( p1 = 380.6 - 352.9 )  # pre/post hange in walk time for treatment group
+( p0 = 372.1 - 369.8 )  # change in walk time for treatment group
 # this is NOT the estimate that adjusts for covariates, though
 
-( d_obs = m1 - m0 )
+( d_obs = p1 - p0 )
 
 
 # if deltas are perfectly balanced, no bias, and 50% dropout
 expect_equal( 0, bound1(ps = 0.5,
                         pa = 0.5,
-                        m1 = m1,  
-                        m0 = m0, 
+                        p1 = p1,  
+                        p0 = p0, 
                         B = 1,
                         d0 = -d_obs) )
 
@@ -313,19 +331,19 @@ expect_equal( 0, bound1(ps = 0.5,
 # Ding Supplement, page 30
 bound1(ps = 1,
        pa = pa,
-       m1 = m1,  
-       m0 = m0, 
+       p1 = p1,  
+       p0 = p0, 
        B = 2,
        d0 = 0)
-(m1 - m0*2)*(pa + (1-pa)/2)
+(p1 - p0*2)*(pa + (1-pa)/2)
 
 # solve for B required to explain away if d0 = 0
 #bm: think about why this doesn't depend on ps
 #  which is confirmed by the form of bound2()
 ( B = get_B(ps = ps,
             pa = pa,
-            m1 = m1, 
-            m0 = m0,  
+            p1 = p1, 
+            p0 = p0,  
             d0 = 0) )
 
 # convert to E-value of sorts, but note that MR_UY is on the mean ratio scale
@@ -337,8 +355,8 @@ bound1(ps = 1,
 # sanity check: yes, this gets it close to 0
 bound1(ps = ps,
        pa = pa,
-       m1 = m1, 
-       m0 = m0,  
+       p1 = p1, 
+       p0 = p0,  
        B = 12,
        d0 = 0) 
 
@@ -348,15 +366,15 @@ bound1(ps = ps,
 # # play with other parameters
 # ps = 0.67
 # pa = 0.5
-# m1 = 50
-# m0 = 20
-# m1 - m0
+# p1 = 50
+# p0 = 20
+# p1 - p0
 # 
 # 
 # get_B(ps = ps,
 #       pa = pa,
-#       m1 = m1, 
-#       m0 = m0,  
+#       p1 = p1, 
+#       p0 = p0,  
 #       d0 = 0)
 # 
 # 
@@ -372,15 +390,15 @@ bound1(ps = ps,
 # for Bearne example
 dp = expand_grid(.ps = ps,
                  .pa = pa,
-                 .m1 = m1,
-                 .m0 = m0,
+                 .p1 = p1,
+                 .p0 = p0,
                  .d0 = seq(-25, 25, 0.01) )
 
 dp = dp %>% rowwise() %>%
   mutate(B = get_B(ps = .ps,
                    pa = .pa,
-                   m1 = .m1, 
-                   m0 = .m0,  
+                   p1 = .p1, 
+                   p0 = .p0,  
                    d0 = .d0) )
 
 # interesting! almost exactly linear 
