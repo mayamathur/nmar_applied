@@ -11,8 +11,8 @@ bound1 = function(pr, pa, p1, p0,
 }
 
 
-#@2022-5-22: this should be equal to Eq. 4.1 prior to applying g(), I think?
-# bias factor required to shift ATE to true
+# bias factor required to shift ATE to the value "true"
+# this is equivalent to Eq 4.1 in Supplement, i.e.: (1 / (2*p0*pa) ) * ( sqrt( (alpha + gamma)^2 + 4*p1*p0*pa*(1-pa) ) - alpha - gamma )
 # true: the true rd_0 to shift to
 get_B = function(pr, pa, p1, p0, rd_0, true = 0) {
   optim( par = 1,  # start value for B
@@ -28,6 +28,10 @@ get_B = function(pr, pa, p1, p0, rd_0, true = 0) {
          method = "Brent" )$par
 }
 
+# more parsimonious version of this fn would be:
+# B = (1 / (2*p0*pa) ) * ( sqrt( (alpha + gamma)^2 + 4*p1*p0*pa*(1-pa) ) - alpha - gamma )
+# evalue = g(B)
+
 
 
 # transform bias factor to E-value
@@ -41,7 +45,33 @@ bound2 = function(pa, p1, p0, B) {
 
 
 # only used for sanity checks but not for bound fns above
-alpha = function(pr, pa, p1, p0, rd_0, true = 0)
+get_alpha = function(pr, rd_0, true = 0){
+  (1 - 1/pr)*rd_0 + true/pr
+}
+
+get_gamma = function(pa, p0, p1){
+  p0*(1-pa) - p1*pa
+}
+
+
+# MISC HELPERS FOR THIS PROJECT -----------------------------------------------------------
+
+prelims = function() {
+  library(dplyr)
+  library(tibble)
+  library(ggplot2)
+  library(data.table)
+  library(stringr)
+  library(tidyverse)
+  library(fastDummies)
+  library(here)
+  library(xtable)
+  library(testthat)
+  library(plotly)
+  library(experiment)
+  library(testthat)
+  library(EValue)
+}
 
 
 

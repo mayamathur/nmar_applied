@@ -2,31 +2,13 @@
 
 # PRELIMINARIES -----------------------------------------------
 
-# data-wrangling packages
-library(dplyr)
-library(tibble)
-library(ggplot2)
-library(data.table)
-library(stringr)
-library(tidyverse)
-library(fastDummies)
-# meta-analysis packages
-library(metafor)
-library(robumeta)
-# other
-library(here)
-library(xtable)
-library(testthat)
-library(plotly)
-library(experiment)
-
 setwd(here())
 source("helper_applied_NMAR.R")
+prelims()
 
 
 
-
-# RISK DIFFERENCE ----------------------------------
+# GENERIC RISK DIFFERENCE ----------------------------------
 
 # ~ Plot: rd_0 vs. B needed to explain away ----------------------------------
 
@@ -34,9 +16,11 @@ source("helper_applied_NMAR.R")
 pa = 0.5 
 p1 = 0.2  
 p0 = 0.1 
+pr = 0.25
 rd_obs = (p1-p0)
 
 
+# PLOT ----------------------------------
 
 dp = expand_grid(.pr = c(0.2, 0.5, 0.75),
                  .pa = pa,
@@ -71,9 +55,9 @@ p = ggplot( data = dp,
               color = "black") +
   
   geom_line() +
-
+  
   scale_color_manual(values = colors) + 
-
+  
   #ggtitle("Fascinating example for risk difference with p0 = 0.1, p1 = 0.2") +
   
   # base_size controls all text sizes; default is 11
@@ -96,178 +80,11 @@ p = ggplot( data = dp,
   theme( text = element_text(face = "bold"),
          panel.grid.major = element_blank(),
          panel.grid.minor = element_blank() ) 
-  
-  #@ couldn't get this to work well - try again
-  # https://bookdown.dongzhuoer.com/hadley/ggplot2-book/direct-labelling.html
-  # library(directlabels)
-  # directlabels::geom_dl(aes(label = class), method = "smart.grid")
 
-
-# SMOKING CESSATION ----------------------------------
-
-# ~ Enter data --------------------------
-n.randomized.trt = 436
-n.randomized.cntrl = 442
-
-# at 6 mos 
-n.dropout.trt = 66
-n.dropout.cntrl = 59
-
-# retention by arm
-n1.retained = n.randomized.trt - n.dropout.trt
-n1.retained / n.randomized.trt
-
-n0.retained = n.randomized.cntrl - n.dropout.cntrl
-n0.retained / n.randomized.cntrl
-
-# overall retention at 6 mos
-( pr = (n0.retained + n1.retained) / (n.randomized.trt + n.randomized.cntrl) )
-
-( pa = n1.retained / (n1.retained + n0.retained) )
-
-# Table 2 for self-reported cessation at 3 or 6 mos
-( p1 = 102/n1.retained )   
-# vs. their calculation, which essentially assumes anyone who dropped
-#  out of either arm did NOT cease smoking:
-expect_equal( 0.234, round( 102/n.randomized.trt, 3 ) )
-
-
-( p0 = 62/n0.retained ) 
-# vs. their calculation:
-expect_equal( 0.140, round( 62/n.randomized.cntrl, 3 ) )
-
-( rd_obs = (p1-p0) )
-
-
-# ~ At one point --------------------------
-
-
-# ~~ rd_0 = 0 --------------------------
-( B = get_B(pr = pr,
-      pa = pa,
-      p1 = p1,
-      p0 = p0,
-      rd_0 = 0) )
-
-# E-value for rd_0=0
-g_trans(B)
-
-
-# ~~ rd_0 = -1 (the absolute bound)  --------------------------
-# the absolute bound on rd_0 for binary outcome
-( B = get_B(pr = pr,
-            pa = pa,
-            p1 = p1,
-            p0 = p0,
-            rd_0 = -1) )
-
-g_trans(B)
-
-
-# ~ Confirm agreement between E-value expressions ------------------
-
-# ~~ get_B should agree with Eq 4.1 --------------------------
-
-( B = get_B(pr = pr,
-            pa = pa,
-            p1 = p1,
-            p0 = p0,
-            rd_0 = 0.08) )
-
-alpha = 
-(1 / (2*p0*pa) ) * sqrt()
-
-
-# ~~ get_B should agree with EValue package --------------------------
-
-# should match this
-library(EValue)
-rd_0 = -0.07
-termA = ( rd_obs - (1-pr)*rd_0 ) / pr
-
-evalues.
-  
-  
-
-
-# ~ Smoking plot -----------------------------------
-
-# add two hypothetical lower amounts of retention
-dp = expand_grid(.pr = c(0.2, 0.5, pr),
-                 .pa = pa,
-                 .p1 = p1,
-                 .p0 = p0,
-                 .rd_0 = seq(-rd_obs, rd_obs, 0.001) )
-
-dp = dp %>%
-  rowwise() %>%
-  mutate(B = get_B(pr = .pr,
-                   pa = .pa,
-                   p1 = .p1, 
-                   p0 = .p0,  
-                   rd_0 = .rd_0) )  %>%
-  mutate(.pr = as.character( round(.pr,2) ) )
-
-
-
-colors = c("#1B9E77", "#ff9900", "red")
-
-p = ggplot( data = dp,
-            aes(x = .rd_0,
-                y = B,
-                color = .pr) ) +
-  
-  
-  # reference lines
-  geom_vline( xintercept = 0,
-              lty = 2,
-              color = "gray") +
-  
-  # observed treatment effect
-  geom_vline( xintercept = p1-p0,
-              lty = 2,
-              color = "black") +
-  
-  geom_line() +
-  
-  #ggtitle("Fascinating example for risk difference with p0 = 0.1, p1 = 0.2") +
-  
-  # base_size controls all text sizes; default is 11
-  # https://ggplot2.tidyverse.org/reference/ggtheme.html
-  theme_bw(base_size = 20) +
-  
-  scale_color_manual(values = colors) +
-  
-  # use all values of
-  #scale_x_log10( breaks = unique(.dp$n) )
-  # use only some values
-  #scale_x_log10( breaks = c(500, 1000) ) +
-  
-  xlab( bquote( bold( {RD^t}[XY * "|" * R == "0"] ) ) ) +
-  scale_x_continuous( breaks = c( seq( -0.10, 0.10, 0.02 ) ) ) +
-  
-  ylab("Bias factor (B)") +
-  coord_cartesian(ylim = c(1,2)) +
-  scale_y_continuous( breaks = seq(1, 2, .1) ) +
-
-  
-  guides( color = guide_legend(title = bquote( bold("Retention (") * bold(p[R]) * bold(")") ) ) ) +
-  theme_bw() +
-  theme( text = element_text(face = "bold"),
-         panel.grid.major = element_blank(),
-         panel.grid.minor = element_blank() ) 
-  
-  #@ couldn't get this to work well - try again
-  # https://bookdown.dongzhuoer.com/hadley/ggplot2-book/direct-labelling.html
-  # library(directlabels)
-  # directlabels::geom_dl(aes(label = class), method = "smart.grid")
-
-p
-
-
-  
-#bm: add second y-axis that uses E-value scale :)
-
+#@ couldn't get this to work well - try again
+# https://bookdown.dongzhuoer.com/hadley/ggplot2-book/direct-labelling.html
+# library(directlabels)
+# directlabels::geom_dl(aes(label = class), method = "smart.grid")
 
 
 
@@ -275,11 +92,11 @@ p
 
 # look at individual values
 bound1(ps = ps,
-      pa = pa,
-      p1 = p1, 
-      p0 = p0, 
-      B = 1.1,
-      rd_0 = 0)
+       pa = pa,
+       p1 = p1, 
+       p0 = p0, 
+       B = 1.1,
+       rd_0 = 0)
 
 # Horowitz & Manski, 1998
 
