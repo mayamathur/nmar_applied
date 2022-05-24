@@ -40,7 +40,23 @@ expect_equal( 0.209, round( 91/n.randomized.trt, 3 ) )
 # vs. their calculation:
 expect_equal( 0.118, round( 52/n.randomized.cntrl, 3 ) )
 
+
+
+# ~ Observed RD --------------------------
+
+# observed RD
 ( rd_obs = (p1-p0) )
+
+# observed CI
+rd_obs_var = ( ( p1 * (1 - p1) ) / n1.retained ) + ( ( p0 * (1 - p0) ) / n0.retained )
+
+( rd_obs_CI = rd_obs + c(-1,1)*qnorm(0.975) * sqrt(rd_obs_var) )
+
+# from within evalues.RD: lowerCI = 0.054477
+expect_equal( rd_obs_CI[1], 0.054477 )
+
+
+# ~ Write stats: Descriptives and unadjusted stats --------------------------
 
 ### write results
 update_result_csv( name = "Retention rate",
@@ -64,54 +80,48 @@ update_result_csv( name = "p1",
 update_result_csv( name = "rd_obs",
                    value = round(rd_obs,2) )
 
+update_result_csv( name = "rd_obs lo",
+                   value = round(rd_obs_CI[1], 2) )
+
+update_result_csv( name = "rd_obs hi",
+                   value = round(rd_obs_CI[2], 2) )
+
 update_result_csv( name = "Authors' rd_obs",
                    value = round(0.209 - 0.118,2) )
 
 # ~ At specific values of RD_0 --------------------------
 
-# rd_0 = 0
-# ( B = get_B(pr = pr,
-#             pa = pa,
-#             p1 = p1,
-#             p0 = p0,
-#             rd_0 = 0) )
-# 
-# # E-value for rd_0=0
-# g_trans(B)
-
-alpha = get_alpha(pr = pr,
-                  rd_0 = 0,
-                  true = 0)
-
-evalue0 = evalues.RD( n11 = n1.retained*p1,
-                      n10 = n1.retained*(1-p1),
-                      n01 = n0.retained*p0,
-                      n00 = n0.retained*(1-p0),
-                      #*note that equivalence arises when we set true = alpha:
-                      true = alpha )
-
-#@breaks if you set alpha = -1
-# look at this
-
-update_result_csv( name = "Evalue est rd_0=0",
-                   value = round(evalue0$est.Evalue, 2) )
-
-update_result_csv( name = "Evalue lo rd_0=0",
-                   value = round(evalue0$lower.Evalue, 2) )
+### rd_0 = 0
 
 
-# rd_0 = -1 
-# the absolute bound on rd_0 for binary outcome
-# ( B = get_B(pr = pr,
-#             pa = pa,
-#             p1 = p1,
-#             p0 = p0,
-#             rd_0 = -1) )
-# 
-# evalue = g_trans(B)
+rd_0_vec = c(0, -rd_obs)
+
+for ( .rd_0 in rd_0_vec ) {
+
+  alpha = get_alpha(pr = pr,
+                    rd_0 = .rd_0,
+                    true = 0)
+  
+  evalue0 = evalues.RD( n11 = n1.retained*p1,
+                        n10 = n1.retained*(1-p1),
+                        n01 = n0.retained*p0,
+                        n00 = n0.retained*(1-p0),
+                        #*note that equivalence arises when we set true = alpha:
+                        true = alpha )
+  
+  update_result_csv( name = paste( "Evalue est rd_0=", round(.rd_0, 2), sep = "" ),
+                     value = round(evalue0$est.Evalue, 2) )
+  
+  update_result_csv( name = paste( "Evalue lo rd_0=", round(.rd_0, 2), sep = "" ),
+                     value = round(evalue0$lower.Evalue, 2) )
+  
+}
 
 
-# SMOKING PLOT -----------------------------------
+
+
+
+# PLOTS: RD_0 vs. E-VALUE; DIFFERENT LEVELS OF RETENTION -----------------------------------
 
 # add two hypothetical lower amounts of retention
 dp = expand_grid(.pr = c(0.2, 0.5, pr),
@@ -133,7 +143,14 @@ dp = dp %>%
 
 colors = c("#1B9E77", "#ff9900", "red")
 
-p = ggplot( data = dp,
+
+# ~ Plot 1: Show other levels of retention ------------------------
+
+( breaks.y1 = seq(1.4, 2, .1) )
+( breaks.y2 = round( g_trans(breaks.y1), 2 ) )
+
+
+plt1 = ggplot( data = dp,
             aes(x = .rd_0,
                 y = B,
                 color = .pr) ) +
@@ -151,25 +168,23 @@ p = ggplot( data = dp,
   
   geom_line() +
   
-  #ggtitle("Fascinating example for risk difference with p0 = 0.1, p1 = 0.2") +
-  
   # base_size controls all text sizes; default is 11
   # https://ggplot2.tidyverse.org/reference/ggtheme.html
   theme_bw(base_size = 20) +
   
   scale_color_manual(values = colors) +
-  
-  # use all values of
-  #scale_x_log10( breaks = unique(.dp$n) )
-  # use only some values
-  #scale_x_log10( breaks = c(500, 1000) ) +
-  
+
   xlab( bquote( bold( {RD^t}[XY * "|" * R == "0"] ) ) ) +
-  scale_x_continuous( breaks = c( seq( -0.10, 0.10, 0.02 ) ) ) +
+  
+  scale_x_continuous( breaks = seq( -0.10, 0.10, 0.02 ) ) +
   
   ylab("Bias factor (B)") +
-  coord_cartesian(ylim = c(1,2)) +
-  scale_y_continuous( breaks = seq(1, 2, .1) ) +
+  coord_cartesian( ylim = c( min(breaks.y1), max(breaks.y1) ) ) +
+  scale_y_continuous( breaks = breaks.y1,
+                      sec.axis = sec_axis( ~g_trans(.),
+                                          name = "Minimum strength of both confounding RRs",
+                                          breaks = breaks.y2),
+                      trans = "log10" ) +
   
   
   guides( color = guide_legend(title = bquote( bold("Retention (") * bold(p[R]) * bold(")") ) ) ) +
@@ -178,16 +193,72 @@ p = ggplot( data = dp,
          panel.grid.major = element_blank(),
          panel.grid.minor = element_blank() ) 
 
-#@ couldn't get this to work well - try again
-# https://bookdown.dongzhuoer.com/hadley/ggplot2-book/direct-labelling.html
-# library(directlabels)
-# directlabels::geom_dl(aes(label = class), method = "smart.grid")
-
-p
+plt1
 
 
 
-#bm: add second y-axis that uses E-value scale :)
+
+
+# ~ Plot 2: Simplified; show other the actual retention ------------------------
+
+dp2 = dp %>% filter(.pr == "0.86")
+
+
+( breaks.y1 = seq(1.6, 2, .1) )
+( breaks.y2 = round( g_trans(breaks.y1), 2 ) )
+
+
+plt2 = ggplot( data = dp2,
+               aes(x = .rd_0,
+                   y = B) ) +
+  
+  
+  # reference lines
+  geom_vline( xintercept = 0,
+              lty = 2,
+              color = "gray") +
+  
+  # observed treatment effect
+  geom_vline( xintercept = p1-p0,
+              lty = 2,
+              color = "black") +
+  
+  geom_line() +
+  
+  # base_size controls all text sizes; default is 11
+  # https://ggplot2.tidyverse.org/reference/ggtheme.html
+  theme_bw(base_size = 20) +
+
+  
+  xlab( bquote( bold( {RD^t}[XY * "|" * R == "0"] ) ) ) +
+  
+  scale_x_continuous( breaks = seq( -0.10, 0.10, 0.02 ) ) +
+  
+  ylab("Bias factor (B)") +
+  coord_cartesian( ylim = c( min(breaks.y1), max(breaks.y1) ) ) +
+  scale_y_continuous( breaks = breaks.y1,
+                      sec.axis = sec_axis( ~g_trans(.),
+                                           name = "Minimum strength of both confounding RRs",
+                                           breaks = breaks.y2 ),
+                      trans = "log10" ) +
+  
+  
+  guides( color = guide_legend(title = bquote( bold("Retention (") * bold(p[R]) * bold(")") ) ) ) +
+  theme_bw() +
+  theme( text = element_text(face = "bold"),
+         panel.grid.major = element_blank(),
+         panel.grid.minor = element_blank() ) 
+
+plt2
+
+
+
+
+
+
+
+
+
 
 
 # THEORY SANITY CHECKS ------------------

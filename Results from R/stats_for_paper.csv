@@ -9,3 +9,9 @@ rd_obs,0.11,NA
 Authors' rd_obs,0.09,NA
 Evalue est rd_0=0,3.02,NA
 Evalue lo rd_0=0,2.02,NA
+rd_obs lo,0.05,NA
+rd_obs hi,0.17,NA
+Evalue est rd_0=-0.110175710959001,2.67,NA
+Evalue lo rd_0=-0.110175710959001,1.73,NA
+Evalue lo rd_0=-0.11,1.73,NA
+Evalue est rd_0=-0.11,2.67,NA

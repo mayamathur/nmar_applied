@@ -35,7 +35,17 @@ get_B = function(pr, pa, p1, p0, rd_0, true = 0) {
 
 
 # transform bias factor to E-value
-g_trans = function(RR) RR + sqrt(RR^2 - RR)
+#g_trans = function(RR) RR + sqrt(RR^2 - RR)
+
+# internal fn from R package EValue, for use customizing sens_plot
+g_trans = Vectorize( function(x) {
+  # define transformation in a way that is monotonic over the effective range of B (>1)
+  # to avoid ggplot errors in sens_plot
+  # helper function for confounded_meta
+  if ( is.na(x) ) return(NA)
+  if (x < 1) return( x / 1e10 )
+  x + sqrt( x^2 - x )
+} )
 
 
 # if we assume rd_0 >= 0
