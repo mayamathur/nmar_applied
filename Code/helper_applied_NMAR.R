@@ -1,6 +1,9 @@
 
-# BOUNDS  -----------------------------------------------------------
+# FNS FOR THEORY SANITY CHECKS  -----------------------------------------------------------
 
+# fns in this section are only used for theory sanity checks in analyze_applied_NMAR.R;
+#  the analyses are easiest to conduct by simply calling evalues.RD(), as we do in the smoking cessation example
+#  in analysis script
 
 # full expression
 bound1 = function(pr, pa, p1, p0,

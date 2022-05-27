@@ -2,14 +2,17 @@
 
 # PRELIMINARIES -----------------------------------------------
 
-setwd(here())
+library(here)
+setwd(here("Code"))
 source("helper_applied_NMAR.R")
+
+# load packages, etc.
 prelims()
 
 
-# SMOKING CESSATION ----------------------------------
+# ENTER DATA FROM SMOKING CESSATION PAPER ----------------------------------
+# see annotated copy on OSF for notes on the origins of these numbers
 
-# ~ Enter data --------------------------
 n.randomized.trt = 436
 n.randomized.cntrl = 442
 
@@ -42,6 +45,8 @@ expect_equal( 0.118, round( 52/n.randomized.cntrl, 3 ) )
 
 
 
+# ANALYZE ----------------------------------
+
 # ~ Observed RD --------------------------
 
 # observed RD
@@ -52,7 +57,7 @@ rd_obs_var = ( ( p1 * (1 - p1) ) / n1.retained ) + ( ( p0 * (1 - p0) ) / n0.reta
 
 ( rd_obs_CI = rd_obs + c(-1,1)*qnorm(0.975) * sqrt(rd_obs_var) )
 
-# from within evalues.RD: lowerCI = 0.054477
+# from body of EValue::evalues.RD: lowerCI = 0.054477
 expect_equal( rd_obs_CI[1], 0.054477 )
 
 
@@ -89,12 +94,12 @@ update_result_csv( name = "rd_obs hi",
 update_result_csv( name = "Authors' rd_obs",
                    value = round(0.209 - 0.118,2) )
 
-# ~ At specific values of RD_0 --------------------------
-
-### rd_0 = 0
 
 
-rd_0_vec = c(0, -rd_obs)
+# ~ E-values --------------------------
+
+# get E-value for each of several values of the sens parameter RD_0
+rd_0_vec = c(0, -0.10)
 
 for ( .rd_0 in rd_0_vec ) {
 
@@ -119,8 +124,6 @@ for ( .rd_0 in rd_0_vec ) {
 
 
 
-
-
 # PLOTS: RD_0 vs. E-VALUE; DIFFERENT LEVELS OF RETENTION -----------------------------------
 
 # add two hypothetical lower amounts of retention
@@ -138,7 +141,6 @@ dp = dp %>%
                    p0 = .p0,  
                    rd_0 = .rd_0) )  %>%
   mutate(.pr = as.character( round(.pr,2) ) )
-
 
 
 colors = c("#1B9E77", "#ff9900", "red")
@@ -253,14 +255,6 @@ plt2
 
 
 
-
-
-
-
-
-
-
-
 # THEORY SANITY CHECKS ------------------
 
 # ~ get_B should agree with Eq 4.1 in main text --------------------------
@@ -296,12 +290,3 @@ evalue_check = evalues.RD( n11 = n1.retained*p1,
 # oh yassss :)
 expect_equal(evalue_check$est.Evalue,
              evalue)
-
-
-# # retention by arm
-# n1.retained = n.randomized.trt - n.dropout.trt
-# n1.retained / n.randomized.trt
-# 
-# n0.retained = n.randomized.cntrl - n.dropout.cntrl
-# n0.retained / n.randomized.cntrl
-
