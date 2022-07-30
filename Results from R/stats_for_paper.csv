@@ -13,3 +13,13 @@ Evalue est rd_0=0,3.02,NA
 Evalue lo rd_0=0,2.02,NA
 Evalue est rd_0=-0.1,2.7,NA
 Evalue lo rd_0=-0.1,1.76,NA
+Thompson pa,0.06,NA
+Thompson p0,0.06,NA
+Thompson p1,0.13,NA
+Thompson rd_obs,0.06,NA
+Thompson rd_obs lo,0.05,NA
+Thompson rd_obs hi,0.08,NA
+Thompson Evalue est rd_0=0,3.35,NA
+Thompson Evalue lo rd_0=0,2.85,NA
+Thompson Evalue est rd_0=-0.1,1.7,NA
+Thompson Evalue lo rd_0=-0.1,1.31,NA

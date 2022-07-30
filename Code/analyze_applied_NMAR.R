@@ -297,22 +297,121 @@ expect_equal(evalue_check$est.Evalue,
 
 # https://ajph.aphapublications.org/doi/pdf/10.2105/AJPH.2013.301302?casa_token=qP-MLjDA1aIAAAAA:TJmp9AeQnLhrBF4J-jBGquUUsUsvwYDLTVtsyfnwd9_eijBElfYGLXss0WTemP8UyQuYcn94QFk
 
-# focus on alcohol use disorder among poor
+# focus on alcohol use disorder among ALL PARTICIPANTS
 # alcohol use --> R (not having impairment, etc., which were formal eligibility criteria) --> homelessness
 
 # Table 2:
 # p0, p1, and their variances (from CIs)
 
-# pa = P(drug user | poor) - NOT SURE IF AVAILABLE?
+# pa = P(drug user) - NOT SURE IF AVAILABLE?
 
 # pr = can approximate from marginal response rate
 
 #bm: keep trying this one...
 
 
+# proportions with and without alcohol use disorder at baseline
+# top of "Results" text
+# they don't report drug use prevalence among all wave-1 subjects, so assume
+#  it's the same as in retained subjects
+pa = 0.064
+# n.randomized.trt = round(n.randomized * 0.064)
+# n.randomized.cntrl = n.randomized - n.randomized.trt
+
+n.retained = 30558
+
+( n1.retained = round( n.retained * pa ) )
+( n0.retained = round( n.retained * (1-pa) ) )
+expect_equal( n.retained, n1.retained + n0.retained )
+
+# sanity check
+#  c.f. reported response rate ("Methods"):
+n.randomized = 43093
+pr = n.retained/n.randomized
+pr.reported = 0.702
+expect_equal( pr, pr.reported, tol = 0.01 )
+
+# outcome probabilities
+# Table 1
+p1 = 0.126
+p0 = 0.064
 
 
 
+# ANALYZE ----------------------------------
+
+# ~ Observed RD --------------------------
+
+# observed RD
+( rd_obs = (p1-p0) )
+
+# observed CI
+rd_obs_var = ( ( p1 * (1 - p1) ) / n1.retained ) + ( ( p0 * (1 - p0) ) / n0.retained )
+
+( rd_obs_CI = rd_obs + c(-1,1)*qnorm(0.975) * sqrt(rd_obs_var) )
+
+
+# ~ Write stats: Descriptives and unadjusted stats --------------------------
+
+analysis = "Thompson"
+
+
+### write results
+update_result_csv( name = paste( analysis, "Retention rate" ),
+                   value = round(100* (n0.retained+n1.retained)/(n.randomized.cntrl+n.randomized.trt) ) )
+
+update_result_csv( name = paste( analysis, "Retention rate control" ),
+                   value = round(100*n0.retained/n.randomized.cntrl) )
+
+update_result_csv( name = paste( analysis, "Retention rate trt" ),
+                   value = round(100*n1.retained/n.randomized.trt) )
+
+update_result_csv( name = paste( analysis, "pa" ),
+                   value = round(pa,2) )
+
+update_result_csv( name = paste( analysis, "p0" ),
+                   value = round(p0,2) )
+
+update_result_csv( name = paste( analysis, "p1" ),
+                   value = round(p1,2) )
+
+update_result_csv( name = paste( analysis, "rd_obs" ),
+                   value = round(rd_obs,2) )
+
+update_result_csv( name = paste( analysis, "rd_obs lo" ),
+                   value = round(rd_obs_CI[1], 2) )
+
+update_result_csv( name = paste( analysis, "rd_obs hi" ),
+                   value = round(rd_obs_CI[2], 2) )
+
+
+
+
+# ~ E-values --------------------------
+
+# get E-value for each of several values of the sens parameter RD_0
+rd_0_vec = c(0, -0.10)
+
+for ( .rd_0 in rd_0_vec ) {
+  
+  alpha = get_alpha(pr = pr,
+                    rd_0 = .rd_0,
+                    true = 0)
+  
+  evalue0 = evalues.RD( n11 = n1.retained*p1,
+                        n10 = n1.retained*(1-p1),
+                        n01 = n0.retained*p0,
+                        n00 = n0.retained*(1-p0),
+                        #*note that equivalence arises when we set true = alpha:
+                        true = alpha )
+  
+  update_result_csv( name = paste( analysis, " Evalue est rd_0=", round(.rd_0, 2), sep = "" ),
+                     value = round(evalue0$est.Evalue, 2) )
+  
+  update_result_csv( name = paste( analysis, " Evalue lo rd_0=", round(.rd_0, 2), sep = "" ),
+                     value = round(evalue0$lower.Evalue, 2) )
+  
+}
 
 
 
