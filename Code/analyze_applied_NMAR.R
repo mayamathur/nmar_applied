@@ -1,4 +1,8 @@
 
+rm(list=ls())
+
+#@USE RENV AT THE END!
+# Also wipe and re-run again because you have some nonsense entries in stats_for_paper.csv
 
 # PRELIMINARIES -----------------------------------------------
 
@@ -10,7 +14,9 @@ source("helper_applied_NMAR.R")
 prelims()
 
 
-# ENTER DATA FROM SMOKING CESSATION PAPER ----------------------------------
+# MAIN-TEXT EXAMPLE: SMOKING CESSATION (VOLPP) ----------------------------------
+
+# ~ Enter data ----------------------------------
 # see annotated paper on OSF for notes on the origins of these numbers
 
 n.randomized.trt = 436
@@ -45,7 +51,6 @@ expect_equal( 0.118, round( 52/n.randomized.cntrl, 3 ) )
 
 
 
-# ANALYZE ----------------------------------
 
 # ~ Observed RD --------------------------
 
@@ -63,35 +68,38 @@ expect_equal( rd_obs_CI[1], 0.054477 )
 
 # ~ Write stats: Descriptives and unadjusted stats --------------------------
 
+analysis = "Volpp"
+
+
 ### write results
-update_result_csv( name = "Retention rate",
+update_result_csv( name = paste( analysis, "Retention rate" ),
                    value = round(100* (n0.retained+n1.retained)/(n.randomized.cntrl+n.randomized.trt) ) )
 
-update_result_csv( name = "Retention rate control",
+update_result_csv( name = paste( analysis, "Retention rate control" ),
                    value = round(100*n0.retained/n.randomized.cntrl) )
 
-update_result_csv( name = "Retention rate trt",
+update_result_csv( name = paste( analysis, "Retention rate trt" ),
                    value = round(100*n1.retained/n.randomized.trt) )
 
-update_result_csv( name = "pa",
+update_result_csv( name = paste( analysis, "pa" ),
                    value = round(pa,2) )
 
-update_result_csv( name = "p0",
+update_result_csv( name = paste( analysis, "p0" ),
                    value = round(p0,2) )
 
-update_result_csv( name = "p1",
+update_result_csv( name = paste( analysis, "p1" ),
                    value = round(p1,2) )
 
-update_result_csv( name = "rd_obs",
+update_result_csv( name = paste( analysis, "rd_obs" ),
                    value = round(rd_obs,2) )
 
-update_result_csv( name = "rd_obs lo",
+update_result_csv( name = paste( analysis, "rd_obs lo" ),
                    value = round(rd_obs_CI[1], 2) )
 
-update_result_csv( name = "rd_obs hi",
+update_result_csv( name = paste( analysis, "rd_obs hi" ),
                    value = round(rd_obs_CI[2], 2) )
 
-update_result_csv( name = "Authors' rd_obs",
+update_result_csv( name = paste( analysis, "Authors' rd_obs" ),
                    value = round(0.209 - 0.118,2) )
 
 
@@ -114,17 +122,17 @@ for ( .rd_0 in rd_0_vec ) {
                         #*note that equivalence arises when we set true = alpha:
                         true = alpha )
   
-  update_result_csv( name = paste( "Evalue est rd_0=", round(.rd_0, 2), sep = "" ),
+  update_result_csv( name = paste( analysis, " Evalue est rd_0=", round(.rd_0, 2), sep = "" ),
                      value = round(evalue0$est.Evalue, 2) )
   
-  update_result_csv( name = paste( "Evalue lo rd_0=", round(.rd_0, 2), sep = "" ),
+  update_result_csv( name = paste( analysis, " Evalue lo rd_0=", round(.rd_0, 2), sep = "" ),
                      value = round(evalue0$lower.Evalue, 2) )
   
 }
 
 
 
-# PLOTS: RD_0 vs. E-VALUE; DIFFERENT LEVELS OF RETENTION -----------------------------------
+# ~ Plots: rd0 vs. E-value -----------------------------------
 
 # add two hypothetical lower amounts of retention
 dp = expand_grid(.pr = c(0.2, 0.5, pr),
@@ -146,7 +154,7 @@ dp = dp %>%
 colors = c("#1B9E77", "#ff9900", "red")
 
 
-# ~ Plot 1: Show other levels of retention ------------------------
+# ~~ Plot 1: Show other levels of retention ------------------------
 
 ( breaks.y1 = seq(1.4, 2, .1) )
 ( breaks.y2 = round( g_trans(breaks.y1), 2 ) )
@@ -201,7 +209,7 @@ plt1
 
 
 
-# ~ Plot 2: Simplified; show other the actual retention ------------------------
+# ~~ Plot 2: Simplified; show other the actual retention ------------------------
 
 dp2 = dp %>% filter(.pr == "0.86")
 
@@ -255,9 +263,9 @@ plt2
 
 
 
-# THEORY SANITY CHECKS ------------------
+# ~ Theory sanity checks ------------------
 
-# ~ get_B should agree with Eq 4.1 in main text --------------------------
+# ~~ get_B should agree with Eq 4.1 in main text --------------------------
 ( B = get_B(pr = pr,
             pa = pa,
             p1 = p1,
@@ -278,7 +286,7 @@ expect_equal(B, B_check)
 
 
 
-# ~ get_B should agree with EValue package --------------------------
+# ~~ get_B should agree with EValue package --------------------------
 
 evalue_check = evalues.RD( n11 = n1.retained*p1,
                            n10 = n1.retained*(1-p1),
@@ -289,26 +297,21 @@ evalue_check = evalues.RD( n11 = n1.retained*p1,
 
 # oh yassss :)
 expect_equal(evalue_check$est.Evalue,
-             evalue)
+             g_trans(B))
 
 
 
-# DRUG USE & HOMELESSNESS ----------------------------------
+
+
+
+# SUPP EXAMPLE: DRUG ABUSE & HOMELESSNESS (THOMPSON) ----------------------------------
+
+# ~ Enter data ----------------------------------
 
 # https://ajph.aphapublications.org/doi/pdf/10.2105/AJPH.2013.301302?casa_token=qP-MLjDA1aIAAAAA:TJmp9AeQnLhrBF4J-jBGquUUsUsvwYDLTVtsyfnwd9_eijBElfYGLXss0WTemP8UyQuYcn94QFk
 
 # focus on alcohol use disorder among ALL PARTICIPANTS
 # alcohol use --> R (not having impairment, etc., which were formal eligibility criteria) --> homelessness
-
-# Table 2:
-# p0, p1, and their variances (from CIs)
-
-# pa = P(drug user) - NOT SURE IF AVAILABLE?
-
-# pr = can approximate from marginal response rate
-
-#bm: keep trying this one...
-
 
 # proportions with and without alcohol use disorder at baseline
 # top of "Results" text
@@ -360,14 +363,14 @@ analysis = "Thompson"
 update_result_csv( name = paste( analysis, "Retention rate" ),
                    value = round(100* (n0.retained+n1.retained)/(n.randomized.cntrl+n.randomized.trt) ) )
 
-update_result_csv( name = paste( analysis, "Retention rate control" ),
-                   value = round(100*n0.retained/n.randomized.cntrl) )
-
-update_result_csv( name = paste( analysis, "Retention rate trt" ),
-                   value = round(100*n1.retained/n.randomized.trt) )
-
 update_result_csv( name = paste( analysis, "pa" ),
                    value = round(pa,2) )
+
+update_result_csv( name = paste( analysis, "pr" ),
+                   value = 100*round(pr,3) )
+
+update_result_csv( name = paste( analysis, "Authors' pr" ),
+                   value = 100*round(pr.reported,3) )
 
 update_result_csv( name = paste( analysis, "p0" ),
                    value = round(p0,2) )
