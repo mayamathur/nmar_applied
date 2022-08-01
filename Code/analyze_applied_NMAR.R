@@ -360,9 +360,6 @@ analysis = "Thompson"
 
 
 ### write results
-update_result_csv( name = paste( analysis, "Retention rate" ),
-                   value = round(100* (n0.retained+n1.retained)/(n.randomized.cntrl+n.randomized.trt) ) )
-
 update_result_csv( name = paste( analysis, "pa" ),
                    value = round(pa,2) )
 
