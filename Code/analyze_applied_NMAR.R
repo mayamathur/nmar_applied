@@ -132,14 +132,23 @@ for ( .rd_0 in rd_0_vec ) {
 
 
 
-# ~ Plots: rd0 vs. E-value -----------------------------------
+
+
+# ~ Plots: Sensitivity parameters vs. E-value -----------------------------------
+
+
+
+colors = rev( c("#1B9E77", "#ff9900", "red") )
+
+# ~~ (Main text) Figure 1: Shopeifting to null vs. to other values ------------------------
 
 # add two hypothetical lower amounts of retention
-dp = expand_grid(.pr = c(0.2, 0.5, pr),
+dp = expand_grid(.pr = pr,
                  .pa = pa,
                  .p1 = p1,
                  .p0 = p0,
-                 .rd_0 = seq(-rd_obs, rd_obs, 0.001) )
+                 .rd_0 = seq(-rd_obs, rd_obs, 0.001),
+                 .true = c(-0.05, 0, 0.05) )
 
 dp = dp %>%
   rowwise() %>%
@@ -147,23 +156,18 @@ dp = dp %>%
                    pa = .pa,
                    p1 = .p1, 
                    p0 = .p0,  
-                   rd_0 = .rd_0) )  %>%
-  mutate(.pr = as.character( round(.pr,2) ) )
+                   rd_0 = .rd_0,
+                   true = .true) )
 
 
-colors = c("#1B9E77", "#ff9900", "red")
-
-
-# ~~ Plot 1: Show other levels of retention ------------------------
-
-( breaks.y1 = seq(1.4, 2, .1) )
+( breaks.y1 = seq(1.2, 2.6, .2) )
 ( breaks.y2 = round( g_trans(breaks.y1), 2 ) )
 
 
-plt1 = ggplot( data = dp,
-            aes(x = .rd_0,
-                y = B,
-                color = .pr) ) +
+plt0 = ggplot( data = dp,
+               aes(x = .rd_0,
+                   y = B,
+                   color = as.factor(.true) ) ) +
   
   
   # reference lines
@@ -183,7 +187,82 @@ plt1 = ggplot( data = dp,
   theme_bw(base_size = 20) +
   
   scale_color_manual(values = colors) +
+  
+  xlab( bquote( bold("Sensitivity parameter") ~ bold( {RD}[AY * "|" * R == "0"] ) ) ) +
+  
+  scale_x_continuous( breaks = seq( -0.10, 0.10, 0.02 ) ) +
 
+  ylab("Bounding factor (B) among retained participants") +
+  coord_cartesian( ylim = c( min(breaks.y1), max(breaks.y1) ) ) +
+  scale_y_continuous( breaks = breaks.y1,
+                      sec.axis = sec_axis( ~g_trans(.),
+                                           name = "M-value",
+                                           breaks = breaks.y2),
+                      trans = "log10" ) +
+  
+  
+  guides( color = guide_legend(title = bquote( bold( {RD^p}[AY]) ) ) ) +
+  theme_bw() +
+  theme( text = element_text(face = "bold"),
+         panel.grid.major = element_blank(),
+         panel.grid.minor = element_blank() ) 
+
+plt0
+
+my_ggsave(name = "plot0_rd0_vs_B_vary_true.pdf",
+          .plot = plt0,
+          .width = 8,
+          .height = 4.5)
+
+
+
+# ~~ (Not shown) Extra figure 2: Show other levels of retention ------------------------
+
+# add two hypothetical lower amounts of retention
+dp = expand_grid(.pr = c(0.2, 0.5, pr),
+                 .pa = pa,
+                 .p1 = p1,
+                 .p0 = p0,
+                 .rd_0 = seq(-rd_obs, rd_obs, 0.001) )
+
+dp = dp %>%
+  rowwise() %>%
+  mutate(B = get_B(pr = .pr,
+                   pa = .pa,
+                   p1 = .p1, 
+                   p0 = .p0,  
+                   rd_0 = .rd_0) )  %>%
+  mutate(.pr = as.character( round(.pr,2) ) )
+
+
+( breaks.y1 = seq(1.4, 2, .1) )
+( breaks.y2 = round( g_trans(breaks.y1), 2 ) )
+
+
+plt1 = ggplot( data = dp,
+               aes(x = .rd_0,
+                   y = B,
+                   color = .pr) ) +
+  
+  
+  # reference lines
+  geom_vline( xintercept = 0,
+              lty = 2,
+              color = "gray") +
+  
+  # observed treatment effect
+  geom_vline( xintercept = p1-p0,
+              lty = 2,
+              color = "black") +
+  
+  geom_line() +
+  
+  # base_size controls all text sizes; default is 11
+  # https://ggplot2.tidyverse.org/reference/ggtheme.html
+  theme_bw(base_size = 20) +
+  
+  scale_color_manual(values = colors) +
+  
   xlab( bquote( bold( {RD^t}[XY * "|" * R == "0"] ) ) ) +
   
   scale_x_continuous( breaks = seq( -0.10, 0.10, 0.02 ) ) +
@@ -192,8 +271,8 @@ plt1 = ggplot( data = dp,
   coord_cartesian( ylim = c( min(breaks.y1), max(breaks.y1) ) ) +
   scale_y_continuous( breaks = breaks.y1,
                       sec.axis = sec_axis( ~g_trans(.),
-                                          name = "Minimum strength of both confounding RRs",
-                                          breaks = breaks.y2),
+                                           name = "Minimum strength of both confounding RRs",
+                                           breaks = breaks.y2),
                       trans = "log10" ) +
   
   
@@ -207,9 +286,7 @@ plt1
 
 
 
-
-
-# ~~ Plot 2: Simplified; show other the actual retention ------------------------
+# ~~ (Not shown) Extra figure 3: Simplified; show other the actual retention ------------------------
 
 dp2 = dp %>% filter(.pr == "0.86")
 
