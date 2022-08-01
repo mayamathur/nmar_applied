@@ -185,7 +185,7 @@ plt0 = ggplot( data = dp,
   
   scale_color_manual(values = colors) +
   
-  xlab( bquote( bold("Sensitivity parameter") ~ bold( {RD}[AY * "|" * R == "0"] ) ) ) +
+  xlab( bquote( bold("Sensitivity parameter") ~ bold( {RD}[AY * " | " * R == "0"] ) ) ) +
   
   scale_x_continuous( breaks = seq( -0.10, 0.10, 0.02 ) ) +
 
@@ -198,7 +198,7 @@ plt0 = ggplot( data = dp,
                       trans = "log10" ) +
   
   
-  guides( color = guide_legend(title = bquote( bold( {RD^p}[AY]) ) ) ) +
+  guides( color = guide_legend(title = bquote( bold( {RD^pop}[AY]) ) ) ) +
   theme_bw() +
   theme( text = element_text(face = "bold"),
          panel.grid.major = element_blank(),
