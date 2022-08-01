@@ -1,8 +1,6 @@
 
 rm(list=ls())
 
-#@USE RENV AT THE END!
-# Also wipe and re-run again because you have some nonsense entries in stats_for_paper.csv
 
 # PRELIMINARIES -----------------------------------------------
 
@@ -137,10 +135,9 @@ for ( .rd_0 in rd_0_vec ) {
 # ~ Plots: Sensitivity parameters vs. E-value -----------------------------------
 
 
-
 colors = rev( c("#1B9E77", "#ff9900", "red") )
 
-# ~~ (Main text) Figure 1: Shopeifting to null vs. to other values ------------------------
+# ~~ (Main text) Figure 2 in manuscript: Shifting to null vs. to other values ------------------------
 
 # add two hypothetical lower amounts of retention
 dp = expand_grid(.pr = pr,
@@ -216,7 +213,7 @@ my_ggsave(name = "plot0_rd0_vs_B_vary_true.pdf",
 
 
 
-# ~~ (Not shown) Extra figure 2: Show other levels of retention ------------------------
+# ~~ (Not shown) Extra figure: Show other levels of retention ------------------------
 
 # add two hypothetical lower amounts of retention
 dp = expand_grid(.pr = c(0.2, 0.5, pr),
@@ -286,7 +283,7 @@ plt1
 
 
 
-# ~~ (Not shown) Extra figure 3: Simplified; show other the actual retention ------------------------
+# ~~ (Not shown) Extra figure: Simplified; show other the actual retention ------------------------
 
 dp2 = dp %>% filter(.pr == "0.86")
 
@@ -381,13 +378,13 @@ expect_equal(evalue_check$est.Evalue,
 
 
 
-# SUPP EXAMPLE: DRUG ABUSE & HOMELESSNESS (THOMPSON) ----------------------------------
+# SUPPLEMENT EXAMPLE: ALCOHOL DISORDERS & HOMELESSNESS (THOMPSON) ----------------------------------
 
 # ~ Enter data ----------------------------------
 
 # https://ajph.aphapublications.org/doi/pdf/10.2105/AJPH.2013.301302?casa_token=qP-MLjDA1aIAAAAA:TJmp9AeQnLhrBF4J-jBGquUUsUsvwYDLTVtsyfnwd9_eijBElfYGLXss0WTemP8UyQuYcn94QFk
 
-# focus on alcohol use disorder among ALL PARTICIPANTS
+# focusing on alcohol use disorder among ALL PARTICIPANTS
 # alcohol use --> R (not having impairment, etc., which were formal eligibility criteria) --> homelessness
 
 # proportions with and without alcohol use disorder at baseline
@@ -405,10 +402,10 @@ n.retained = 30558
 expect_equal( n.retained, n1.retained + n0.retained )
 
 # sanity check
-#  c.f. reported response rate ("Methods"):
+#  not an RCT, but using "n.randomized", etc., terminology for consistency with example above
 n.randomized = 43093
 pr = n.retained/n.randomized
-pr.reported = 0.702
+pr.reported = 0.702  # reported response rate ("Methods"): 70.2%
 expect_equal( pr, pr.reported, tol = 0.01 )
 
 # outcome probabilities
