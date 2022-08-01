@@ -13,3 +13,15 @@ Volpp Evalue est rd_0=0,3.02,NA
 Volpp Evalue lo rd_0=0,2.02,NA
 Volpp Evalue est rd_0=-0.1,2.7,NA
 Volpp Evalue lo rd_0=-0.1,1.76,NA
+Thompson pa,0.07,NA
+Thompson pr,70.9,NA
+Thompson Authors' pr,70.2,NA
+Thompson p0,0.04,NA
+Thompson p1,0.08,NA
+Thompson rd_obs,0.04,NA
+Thompson rd_obs lo,0.03,NA
+Thompson rd_obs hi,0.05,NA
+Thompson Evalue est rd_0=0,3.68,NA
+Thompson Evalue lo rd_0=0,2.98,NA
+Thompson Evalue est rd_0=-0.05,2.07,NA
+Thompson Evalue lo rd_0=-0.05,1.55,NA

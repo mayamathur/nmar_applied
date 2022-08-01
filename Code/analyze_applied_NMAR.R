@@ -384,34 +384,48 @@ expect_equal(evalue_check$est.Evalue,
 
 # https://ajph.aphapublications.org/doi/pdf/10.2105/AJPH.2013.301302?casa_token=qP-MLjDA1aIAAAAA:TJmp9AeQnLhrBF4J-jBGquUUsUsvwYDLTVtsyfnwd9_eijBElfYGLXss0WTemP8UyQuYcn94QFk
 
-# focusing on alcohol use disorder among ALL PARTICIPANTS
-# alcohol use --> R (not having impairment, etc., which were formal eligibility criteria) --> homelessness
+# focusing on alcohol disorder among ALL PARTICIPANTS
+# alcohol disorder --> R (not having impairment, etc., which were formal eligibility criteria) --> homelessness
 
-# proportions with and without alcohol use disorder at baseline
-# top of "Results" text
-# they don't report drug use prevalence among all wave-1 subjects, so assume
-#  it's the same as in retained subjects
-pa = 0.064
-# n.randomized.trt = round(n.randomized * 0.064)
-# n.randomized.cntrl = n.randomized - n.randomized.trt
 
-n.retained = 30558
+# reconstruct 2 x 2 table cells from Table 1
+# **note that the table includes exposure levels that aren't in the present analysis
+#  (e.g., combined substance-use disorders)
 
-( n1.retained = round( n.retained * pa ) )
-( n0.retained = round( n.retained * (1-pa) ) )
-expect_equal( n.retained, n1.retained + n0.retained )
+# *total* retained numbers with Y=1 and Y=0, including irrelevant exposure levels
+n.y0.all = 29336
+n.y1.all = 1222
 
-# sanity check
-#  not an RCT, but using "n.randomized", etc., terminology for consistency with example above
-n.randomized = 43093
-pr = n.retained/n.randomized
+# all of these are among RETAINED participants
+( n.a0.y0 = round(0.924*n.y0.all) )
+( n.a1.y0 = round(0.064*n.y0.all) )
+
+( n.a0.y1 = round(0.818*n.y1.all) )
+( n.a1.y1 = round(0.126*n.y1.all) )
+
+( n.a1 = n.a1.y0 + n.a1.y1 )
+( n.a0 = n.a0.y0 + n.a0.y1 )
+
+# sanity check: should be a little less than n.y0.all because this now
+#  excludes irrelevant exposure levels
+(n.a0.y0 + n.a1.y0) / n.y0.all
+# and similarly here:
+(n.a0.y1 + n.a1.y1) / n.y1.all
+
+# P(A=1 | R=1)
+n.retained = n.a0 + n.a1
+( pa = n.a1 / n.retained )
+
+# P(R=1) including all exposure levels since it's all that's reported
+pr = 30558/43093
 pr.reported = 0.702  # reported response rate ("Methods"): 70.2%
 expect_equal( pr, pr.reported, tol = 0.01 )
 
+
 # outcome probabilities
-# Table 1
-p1 = 0.126
-p0 = 0.064
+( p1 = n.a1.y1 / n.a1 )
+( p0 = n.a0.y1 / n.a0 )
+
 
 
 
@@ -423,7 +437,7 @@ p0 = 0.064
 ( rd_obs = (p1-p0) )
 
 # observed CI
-rd_obs_var = ( ( p1 * (1 - p1) ) / n1.retained ) + ( ( p0 * (1 - p0) ) / n0.retained )
+rd_obs_var = ( ( p1 * (1 - p1) ) / n.a1 ) + ( ( p0 * (1 - p0) ) / n.a0 )
 
 ( rd_obs_CI = rd_obs + c(-1,1)*qnorm(0.975) * sqrt(rd_obs_var) )
 
@@ -464,7 +478,7 @@ update_result_csv( name = paste( analysis, "rd_obs hi" ),
 # ~ E-values --------------------------
 
 # get E-value for each of several values of the sens parameter RD_0
-rd_0_vec = c(0, -0.10)
+rd_0_vec = c(0, -0.05)
 
 for ( .rd_0 in rd_0_vec ) {
   
@@ -472,10 +486,10 @@ for ( .rd_0 in rd_0_vec ) {
                     rd_0 = .rd_0,
                     true = 0)
   
-  evalue0 = evalues.RD( n11 = n1.retained*p1,
-                        n10 = n1.retained*(1-p1),
-                        n01 = n0.retained*p0,
-                        n00 = n0.retained*(1-p0),
+  evalue0 = evalues.RD( n11 = n.a1.y1,
+                        n10 = n.a1.y0,
+                        n01 = n.a0.y1,
+                        n00 = n.a0.y0,
                         #*note that equivalence arises when we set true = alpha:
                         true = alpha )
   
