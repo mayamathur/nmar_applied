@@ -258,3 +258,27 @@ write_est_inf = function( est, var, prefix, takeExp ) {
                     hi = transf(CIs[2]),
                     pval = pval )
 }
+
+
+# one or both dirs can be NA
+my_ggsave = function(name,
+                     .plot = last_plot(),
+                     .width,
+                     .height,
+                     .results.dir = results.dir,
+                     .overleaf.dir = overleaf.dir) {
+  
+  dirs = c(.results.dir, .overleaf.dir)
+  dirIsNA = sapply(dirs, is.na)
+  validDirs = dirs[ !dirIsNA ]
+  
+  
+  for ( dir in validDirs ) {
+    setwd(dir)
+    ggsave( name,
+            plot = .plot,
+            width = .width,
+            height = .height,
+            device = "pdf" )
+  }
+}

@@ -144,7 +144,7 @@ dp = expand_grid(.pr = pr,
                  .pa = pa,
                  .p1 = p1,
                  .p0 = p0,
-                 .rd_0 = seq(-rd_obs, rd_obs, 0.001),
+                 .rd_0 = seq(-0.12, 0.12, 0.001),
                  .true = c(-0.05, 0, 0.05) )
 
 dp = dp %>%
@@ -177,7 +177,7 @@ plt0 = ggplot( data = dp,
               lty = 2,
               color = "black") +
   
-  geom_line() +
+  geom_line(lwd=1.1) +
   
   # base_size controls all text sizes; default is 11
   # https://ggplot2.tidyverse.org/reference/ggtheme.html
@@ -185,11 +185,12 @@ plt0 = ggplot( data = dp,
   
   scale_color_manual(values = colors) +
   
-  xlab( bquote( bold("Sensitivity parameter") ~ bold( {RD}[AY * " | " * R == "0"] ) ) ) +
+  xlab( bquote( "Sensitivity Parameter" ~ italic({RD}[AY * " | " * R == "0"]) ) ) +
   
-  scale_x_continuous( breaks = seq( -0.10, 0.10, 0.02 ) ) +
+  scale_x_continuous( breaks = seq( -0.12, 0.12, 0.02 ),
+                      expand = c(0,0) ) +
 
-  ylab("Bounding factor (B) among retained participants") +
+  ylab( bquote(italic(B)) ) +
   coord_cartesian( ylim = c( min(breaks.y1), max(breaks.y1) ) ) +
   scale_y_continuous( breaks = breaks.y1,
                       sec.axis = sec_axis( ~g_trans(.),
@@ -198,18 +199,27 @@ plt0 = ggplot( data = dp,
                       trans = "log10" ) +
   
   
-  guides( color = guide_legend(title = bquote( bold( {RD^pop}[AY]) ) ) ) +
-  theme_bw() +
-  theme( text = element_text(face = "bold"),
+  guides( color = guide_legend(title = bquote( underline(italic({RD^pop}[AY])) ) ) ) +
+  #theme_bw() +
+  theme( text = element_text(size=12,
+                             #face = "bold",
+                             color = "black"),
          panel.grid.major = element_blank(),
-         panel.grid.minor = element_blank() ) 
+         panel.grid.minor = element_blank(),
+         
+         axis.line = element_line(colour = "black"),
+         panel.border = element_blank(),
+         panel.background = element_blank(),
+         
+         legend.position = c(0.85, 0.115)
+         ) 
 
 plt0
 
 my_ggsave(name = "plot0_rd0_vs_B_vary_true.pdf",
           .plot = plt0,
-          .width = 8,
-          .height = 4.5)
+          .width = 7,
+          .height = 7)
 
 
 
